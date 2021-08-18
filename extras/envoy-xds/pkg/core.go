@@ -65,18 +65,19 @@ func makeGRPCListener(shrd string, hp hostPort, domains ...string) *listener.Lis
 							Cluster: domain,
 						},
 						Timeout: durationpb.New(60 * time.Second),
-						RetryPolicy: &route.RetryPolicy{
-							NumRetries: wrapperspb.UInt32(2),
-							RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
-								{
-									Name: "envoy.retry_host_predicates.previous_hosts",
-								},
-							},
-							HostSelectionRetryMaxAttempts: 3,
-						},
 					},
 				},
 			}},
+			RetryPolicy: &route.RetryPolicy{
+				RetryOn: "5xx,envoy-ratelimited,cancelled,connect-failure,gateway-error,refused-stream,reset,resource-exhausted,unavailable",
+				NumRetries: wrapperspb.UInt32(2),
+				RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+					{
+						Name: "envoy.retry_host_predicates.previous_hosts",
+					},
+				},
+				HostSelectionRetryMaxAttempts: 3,
+			},
 		}
 	}
 	manager := &hcm.HttpConnectionManager{
